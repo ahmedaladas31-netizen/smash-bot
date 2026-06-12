@@ -1,0 +1,45 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    color-scheme: dark;
+  }
+
+  html,
+  body {
+    margin: 0;
+    padding: 0;
+  }
+
+  body {
+    @apply bg-coal-950 text-zinc-100 font-sans antialiased;
+    /* خلفية دافئة خفيفة لمطعم برجر */
+    background-image:
+      radial-gradient(60rem 60rem at 110% -10%, rgba(234, 88, 12, 0.12), transparent 60%),
+      radial-gradient(50rem 50rem at -10% 0%, rgba(185, 28, 28, 0.1), transparent 55%);
+    background-attachment: fixed;
+  }
+
+  /* أرقام الهواتف والأسعار تبقى بأرقام لاتينية واضحة */
+  .nums {
+    font-feature-settings: 'tnum';
+    direction: ltr;
+    unicode-bidi: embed;
+  }
+}
+
+@layer utilities {
+  /* شريط تمرير أنحف ومناسب للوضع الداكن */
+  .scroll-thin::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  .scroll-thin::-webkit-scrollbar-thumb {
+    @apply bg-coal-700 rounded-full;
+  }
+  .scroll-thin::-webkit-scrollbar-track {
+    background: transparent;
+  }
+}
