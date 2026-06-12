@@ -4,6 +4,7 @@
  */
 
 const WEBHOOK_URL = import.meta.env.VITE_WEBHOOK_URL as string | undefined
+const WEBHOOK_TOKEN = import.meta.env.VITE_WEBHOOK_TOKEN as string | undefined
 
 /** هل تمّت تهيئة رابط الـ webhook؟ */
 export const isWebhookConfigured = Boolean(WEBHOOK_URL)
@@ -20,9 +21,17 @@ export async function sendCustomerReply(
     throw new Error('رابط الـ webhook (VITE_WEBHOOK_URL) غير مهيّأ')
   }
 
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+  }
+  // توكن مشترك يتحقق منه n8n قبل الإرسال — طبقة حماية أولى تمنع الإرسال
+  // العشوائي عبر الـ webhook المكشوف. لاحظ أنه يظهر في bundle المتصفح،
+  // وهذا مقبول لداشبورد داخلي؛ الحل الأمتن لاحقاً عبر Supabase Edge Function.
+  if (WEBHOOK_TOKEN) headers['X-Smash-Token'] = WEBHOOK_TOKEN
+
   const res = await fetch(WEBHOOK_URL, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers,
     body: JSON.stringify({ phone, message }),
   })
 

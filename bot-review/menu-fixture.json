@@ -1,0 +1,67 @@
+{
+  "_note": "بيانات تجريبية للاختبار فقط — استبدلها بتصدير حقيقي من full_menu_view في Supabase (نفس الأعمدة التي تراها أداة الـ AI Agent). الأسعار هنا افتراضية.",
+  "items": [
+    {
+      "name": "سماش كلاسيك",
+      "category": "برجر لحمة",
+      "sizes": [
+        { "grams": 150, "sandwich_price": 28, "meal_price": 38 },
+        { "grams": 200, "sandwich_price": 35, "meal_price": 45 },
+        { "grams": 300, "sandwich_price": 45, "meal_price": 55 }
+      ],
+      "ingredients": "لحمة بقر سماش، جبنة شيدر، خس، بندورة، بصل، صوص سماش"
+    },
+    {
+      "name": "سماش تشيز",
+      "category": "برجر لحمة",
+      "sizes": [
+        { "grams": 150, "sandwich_price": 31, "meal_price": 41 },
+        { "grams": 200, "sandwich_price": 38, "meal_price": 48 },
+        { "grams": 300, "sandwich_price": 48, "meal_price": 58 }
+      ],
+      "ingredients": "لحمة بقر سماش، طبقتين جبنة شيدر، بصل مكرمل، صوص خاص"
+    },
+    {
+      "name": "تشيكن سماش",
+      "category": "برجر دجاج",
+      "sizes": [
+        { "grams": 150, "sandwich_price": 25, "meal_price": 35 },
+        { "grams": 200, "sandwich_price": 32, "meal_price": 42 },
+        { "grams": 300, "sandwich_price": 42, "meal_price": 52 }
+      ],
+      "ingredients": "صدر دجاج مقرمش، جبنة، خس، مايونيز حار"
+    },
+    {
+      "name": "سماش دبل",
+      "category": "برجر لحمة",
+      "sizes": [
+        { "grams": 300, "sandwich_price": 52, "meal_price": 62 }
+      ],
+      "ingredients": "طبقتين لحمة سماش، جبنة مضاعفة، مخلل، صوص سماش"
+    },
+    {
+      "name": "بطاطا مقلية",
+      "category": "إضافات",
+      "sizes": [
+        { "grams": null, "sandwich_price": 10, "meal_price": null }
+      ],
+      "ingredients": "بطاطا طازجة"
+    },
+    {
+      "name": "مشروب غازي",
+      "category": "مشروبات",
+      "sizes": [
+        { "grams": null, "sandwich_price": 7, "meal_price": null }
+      ],
+      "ingredients": "كولا، سبرايت، فانتا"
+    },
+    {
+      "name": "عصير",
+      "category": "مشروبات",
+      "sizes": [
+        { "grams": null, "sandwich_price": 8, "meal_price": null }
+      ],
+      "ingredients": "برتقال أو ليمون نعنع"
+    }
+  ]
+}
