@@ -37,10 +37,10 @@ export const STATUS_META: Record<OrderStatus, StatusMeta> = {
   },
   on_the_way: {
     label: 'في الطريق',
-    badge: 'bg-orange-500/15 text-orange-300 ring-1 ring-orange-500/40',
-    activeBtn: 'bg-orange-500 text-coal-950 shadow-lg shadow-orange-500/30',
-    cardAccent: 'border-r-orange-500',
-    dot: 'bg-orange-500',
+    badge: 'bg-indigo-500/15 text-indigo-300 ring-1 ring-indigo-500/40',
+    activeBtn: 'bg-indigo-500 text-white shadow-lg shadow-indigo-500/30',
+    cardAccent: 'border-r-indigo-500',
+    dot: 'bg-indigo-500',
   },
   delivered: {
     label: 'تم التسليم',

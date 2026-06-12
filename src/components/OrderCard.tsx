@@ -16,6 +16,7 @@ import StatusButtons from './StatusButtons'
 import QuickReplies from './QuickReplies'
 import { STATUS_META } from '../lib/constants'
 import {
+  ageMinutes,
   cx,
   displayPhone,
   formatFullTime,
@@ -26,6 +27,22 @@ import {
 } from '../lib/utils'
 import type { QuickReply } from '../lib/constants'
 import type { Order, OrderStatus } from '../types'
+
+/** الحالات النشطة التي يُلوَّن فيها عمر الطلب حسب الإلحاح */
+const ACTIVE_STATUSES = new Set<OrderStatus>([
+  'new',
+  'preparing',
+  'ready',
+  'on_the_way',
+])
+
+/** صنف لون شِبّة عمر الطلب: أخضر <10د · أصفر 10–20د · أحمر >20د */
+function ageChipClass(minutes: number): string {
+  if (minutes > 20) return 'bg-red-500/15 text-red-300 ring-1 ring-red-500/40'
+  if (minutes >= 10)
+    return 'bg-amber-500/15 text-amber-300 ring-1 ring-amber-500/40'
+  return 'bg-emerald-500/15 text-emerald-300 ring-1 ring-emerald-500/40'
+}
 
 interface OrderCardProps {
   order: Order
@@ -56,6 +73,8 @@ export default function OrderCard({
   const meta = STATUS_META[order.status]
   const parsed = parseItems(order.items)
   const asked = Boolean(order.customer_asked)
+  const isActive = ACTIVE_STATUSES.has(order.status)
+  const age = ageMinutes(order.created_at)
   const isDelivery =
     parsed.delivery_type.includes('توصيل') ||
     parsed.delivery_type.includes('دليفري')
@@ -78,7 +97,7 @@ export default function OrderCard({
         'relative overflow-hidden rounded-2xl border border-coal-700 bg-coal-800/80 shadow-xl ring-1 ring-black/20 backdrop-blur-sm',
         'border-r-4',
         meta.cardAccent,
-        isNew && !isCancelledFlash && 'animate-flash-new',
+        isNew && !isCancelledFlash && 'animate-pulse-ring ring-2 ring-brand-400/70',
         asked && !isCancelledFlash && 'ring-2 ring-amber-400 ring-offset-2 ring-offset-coal-950',
         isCancelledFlash &&
           'animate-flash-cancelled ring-2 ring-red-500 ring-offset-2 ring-offset-coal-950',
@@ -124,13 +143,16 @@ export default function OrderCard({
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
             <div className="flex items-center gap-2">
-              <User className="h-5 w-5 shrink-0 text-brand-400" />
-              <h3 className="truncate text-lg font-black sm:text-xl">
+              <User className="h-4 w-4 shrink-0 text-brand-400" />
+              <h3 className="truncate text-base font-bold text-zinc-300">
                 {order.customer_name?.trim() || 'زبون'}
               </h3>
             </div>
             <div
-              className="mt-1 flex items-center gap-1.5 text-xs text-zinc-400"
+              className={cx(
+                'mt-1 inline-flex items-center gap-1.5 rounded-lg px-2 py-1 text-xs font-bold',
+                isActive ? ageChipClass(age) : 'text-zinc-400',
+              )}
               title={formatFullTime(order.created_at)}
             >
               <Clock className="h-3.5 w-3.5" />
@@ -159,14 +181,14 @@ export default function OrderCard({
           </a>
         </div>
 
-        {/* وصف الطلب */}
-        <div className="rounded-xl bg-coal-900/40 p-3">
-          <div className="mb-1.5 flex items-center gap-1.5 text-xs font-semibold text-zinc-400">
+        {/* وصف الطلب — العنصر الأبرز في البطاقة */}
+        <div className="rounded-xl bg-coal-900/60 p-3.5 ring-1 ring-coal-700">
+          <div className="mb-2 flex items-center gap-1.5 text-xs font-semibold text-zinc-400">
             <ShoppingBag className="h-4 w-4" />
             تفاصيل الطلب
           </div>
           {/* summary يحوي الملخّص، أو النص الخام كما هو عند فشل التحليل */}
-          <p className="whitespace-pre-line break-words text-base font-semibold leading-relaxed text-zinc-100">
+          <p className="whitespace-pre-line break-words text-xl font-black leading-relaxed text-white">
             {parsed.summary || 'بدون تفاصيل'}
           </p>
         </div>

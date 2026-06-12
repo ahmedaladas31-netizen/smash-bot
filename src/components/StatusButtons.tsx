@@ -27,45 +27,49 @@ export default function StatusButtons({
   const currentIndex = STATUS_FLOW.indexOf(current)
 
   return (
-    <div className="flex flex-wrap items-center gap-2">
-      {STATUS_FLOW.map((status, idx) => {
-        const meta = STATUS_META[status]
-        const Icon = STATUS_ICON[status]
-        const isCurrent = status === current
-        const isDone = currentIndex > -1 && idx < currentIndex
-        return (
-          <button
-            key={status}
-            type="button"
-            disabled={disabled || isCurrent}
-            onClick={() => onChange(status)}
-            className={cx(
-              'inline-flex items-center gap-1.5 rounded-xl px-3 py-2 text-sm font-bold transition-all active:scale-95 disabled:cursor-default',
-              isCurrent
-                ? meta.activeBtn
-                : isDone
-                  ? 'bg-coal-800 text-zinc-500 ring-1 ring-coal-700'
-                  : 'bg-coal-800 text-zinc-200 ring-1 ring-coal-700 hover:bg-coal-700 hover:ring-brand-500/50',
-            )}
-          >
-            <Icon className="h-4 w-4" />
-            {meta.label}
-          </button>
-        )
-      })}
+    <div className="space-y-2.5">
+      {/* أزرار المسار في شبكة موحّدة — أحجام متساوية ومواقع ثابتة */}
+      <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+        {STATUS_FLOW.map((status, idx) => {
+          const meta = STATUS_META[status]
+          const Icon = STATUS_ICON[status]
+          const isCurrent = status === current
+          const isDone = currentIndex > -1 && idx < currentIndex
+          return (
+            <button
+              key={status}
+              type="button"
+              disabled={disabled || isCurrent}
+              onClick={() => onChange(status)}
+              className={cx(
+                'flex w-full items-center justify-center gap-1.5 rounded-xl px-3 py-2.5 text-sm font-bold transition-all active:scale-95 disabled:cursor-default',
+                isCurrent
+                  ? meta.activeBtn
+                  : isDone
+                    ? 'bg-coal-800 text-zinc-500 ring-1 ring-coal-700'
+                    : 'bg-coal-800 text-zinc-200 ring-1 ring-coal-700 hover:bg-coal-700 hover:ring-brand-500/50',
+              )}
+            >
+              <Icon className="h-4 w-4 shrink-0" />
+              {meta.label}
+            </button>
+          )
+        })}
+      </div>
 
+      {/* زر الإلغاء منفصل أسفل فاصل لتقليل الكبس بالغلط */}
       <button
         type="button"
         disabled={disabled || current === 'cancelled'}
         onClick={() => onChange('cancelled')}
         className={cx(
-          'inline-flex items-center gap-1.5 rounded-xl px-3 py-2 text-sm font-bold transition-all active:scale-95 disabled:cursor-default disabled:opacity-50',
+          'flex w-full items-center justify-center gap-1.5 rounded-xl px-3 py-2.5 text-sm font-bold transition-all active:scale-95 disabled:cursor-default disabled:opacity-50',
           current === 'cancelled'
             ? STATUS_META.cancelled.activeBtn
             : 'bg-flame-700/15 text-flame-500 ring-1 ring-flame-700/40 hover:bg-flame-700/25',
         )}
       >
-        <XCircle className="h-4 w-4" />
+        <XCircle className="h-4 w-4 shrink-0" />
         إلغاء
       </button>
     </div>

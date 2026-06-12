@@ -34,7 +34,7 @@ import { parseItems } from './lib/utils'
 import type { Order, OrderStatus, TabKey } from './types'
 
 const SOUND_KEY = 'smashlab_sound'
-const FLASH_MS = 6000
+const FLASH_MS = 30_000
 const CANCEL_FLASH_MS = 15_000
 
 /**
@@ -223,6 +223,7 @@ export default function App() {
       new: 0,
       preparing: 0,
       ready: 0,
+      on_the_way: 0,
       delivered: 0,
       cancelled: 0,
     }
@@ -395,7 +396,7 @@ export default function App() {
     <div className="min-h-screen">
       {busyMode && <BusyModeBar delay={busyDelay} />}
 
-      <div className="mx-auto max-w-7xl px-3 py-4 sm:px-6 sm:py-6">
+      <div className="mx-auto max-w-[2000px] px-3 py-4 sm:px-6 sm:py-6">
         <div className="space-y-5">
           <Header
             connected={connected}
@@ -432,7 +433,7 @@ export default function App() {
               }
             />
           ) : (
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+            <div className="grid grid-cols-[repeat(auto-fill,minmax(320px,1fr))] gap-4">
               {visibleOrders.map((order) => (
                 <OrderCard
                   key={order.id}

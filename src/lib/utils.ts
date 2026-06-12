@@ -92,6 +92,13 @@ export function formatRelativeTime(dateStr: string): string {
   return `من ${arabicUnit(diffDay, 'يوم', 'يومين', 'أيام', 'يوم')}`
 }
 
+/** عمر الطلب بالدقائق (للتلوين حسب الإلحاح) — صفر إن كان التاريخ غير صالح */
+export function ageMinutes(dateStr: string): number {
+  const t = new Date(dateStr).getTime()
+  if (Number.isNaN(t)) return 0
+  return Math.max(0, Math.floor((Date.now() - t) / 60000))
+}
+
 /** الوقت الكامل للعرض عند hover (title) */
 export function formatFullTime(dateStr: string): string {
   const date = new Date(dateStr)
