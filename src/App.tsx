@@ -1,9 +1,11 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { ClipboardList, MessagesSquare } from 'lucide-react'
 import Header from './components/Header'
 import BusyModeBar from './components/BusyModeBar'
 import BusyModeToggle from './components/BusyModeToggle'
 import StatusTabs from './components/StatusTabs'
 import OrderCard from './components/OrderCard'
+import ConversationCenter from './components/ConversationCenter'
 import {
   ConfigState,
   EmptyState,
@@ -30,7 +32,7 @@ import {
   playNewOrderBeep,
   primeAudio,
 } from './lib/sound'
-import { parseItems } from './lib/utils'
+import { computeDailyNumbers, cx, parseItems } from './lib/utils'
 import type { Order, OrderStatus, TabKey } from './types'
 
 const SOUND_KEY = 'smashlab_sound'
@@ -73,6 +75,8 @@ function priorityRank(o: Order, cancelledIds: Set<string>): number {
 
 export default function App() {
   const [activeTab, setActiveTab] = useState<TabKey>('all')
+  const [view, setView] = useState<'orders' | 'conversations'>('orders')
+  const [selectedPhone, setSelectedPhone] = useState<string | null>(null)
   const [soundOn, setSoundOn] = useState<boolean>(() => {
     const saved = localStorage.getItem(SOUND_KEY)
     return saved === null ? true : saved === '1'
@@ -250,6 +254,15 @@ export default function App() {
     })
   }, [orders, activeTab, cancelledIds])
 
+  // الأرقام التسلسلية اليومية لكل الطلبات (تشمل الكل، تصفير منتصف الليل)
+  const dailyNumbers = useMemo(() => computeDailyNumbers(orders), [orders])
+
+  // فتح محادثة زبون من بطاقة الطلب
+  const openConversation = useCallback((phone: string) => {
+    setSelectedPhone(phone)
+    setView('conversations')
+  }, [])
+
   // ===== المعالِجات (تحديث متفائل + طفرة Supabase + واتساب) =====
   const handleStatusChange = useCallback(
     async (id: string, status: OrderStatus) => {
@@ -404,49 +417,91 @@ export default function App() {
             onToggleSound={toggleSound}
           />
 
-          <BusyModeToggle
-            busyMode={busyMode}
-            busyDelay={busyDelay}
-            generalWaitTime={generalWaitTime}
-            onToggle={handleToggleBusy}
-            onDelayChange={handleDelayChange}
-            onWaitTimeChange={handleWaitTimeChange}
-          />
+          {/* مبدّل العرض: الطلبات / المحادثات */}
+          <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={() => setView('orders')}
+              className={cx(
+                'inline-flex items-center gap-2 rounded-xl px-4 py-2 text-base font-bold transition-all active:scale-95',
+                view === 'orders'
+                  ? 'bg-gradient-to-l from-brand-600 to-flame-700 text-white shadow-lg shadow-brand-600/25'
+                  : 'bg-coal-800/80 text-zinc-300 ring-1 ring-coal-700 hover:bg-coal-700',
+              )}
+            >
+              <ClipboardList className="h-5 w-5" />
+              الطلبات
+            </button>
+            <button
+              type="button"
+              onClick={() => setView('conversations')}
+              className={cx(
+                'inline-flex items-center gap-2 rounded-xl px-4 py-2 text-base font-bold transition-all active:scale-95',
+                view === 'conversations'
+                  ? 'bg-gradient-to-l from-brand-600 to-flame-700 text-white shadow-lg shadow-brand-600/25'
+                  : 'bg-coal-800/80 text-zinc-300 ring-1 ring-coal-700 hover:bg-coal-700',
+              )}
+            >
+              <MessagesSquare className="h-5 w-5" />
+              المحادثات
+            </button>
+          </div>
 
-          <StatusTabs
-            active={activeTab}
-            counts={counts}
-            onChange={setActiveTab}
-          />
+          {view === 'orders' ? (
+            <>
+              <BusyModeToggle
+                busyMode={busyMode}
+                busyDelay={busyDelay}
+                generalWaitTime={generalWaitTime}
+                onToggle={handleToggleBusy}
+                onDelayChange={handleDelayChange}
+                onWaitTimeChange={handleWaitTimeChange}
+              />
 
-          {/* المحتوى */}
-          {ordersError ? (
-            <ErrorState onRetry={refetchOrders} />
-          ) : ordersLoading ? (
-            <LoadingState />
-          ) : visibleOrders.length === 0 ? (
-            <EmptyState
-              message={
-                activeTab === 'all'
-                  ? 'لا توجد طلبات بعد'
-                  : 'لا توجد طلبات في هذا التبويب'
-              }
-            />
-          ) : (
-            <div className="grid grid-cols-[repeat(auto-fill,minmax(320px,1fr))] gap-4">
-              {visibleOrders.map((order) => (
-                <OrderCard
-                  key={order.id}
-                  order={order}
-                  isNew={newIds.has(order.id)}
-                  isCancelledFlash={cancelledIds.has(order.id)}
-                  onStatusChange={handleStatusChange}
-                  onAcknowledge={handleAcknowledge}
-                  onAcknowledgeCancel={() => handleAcknowledgeCancel(order.id)}
-                  onQuickReply={handleQuickReply}
+              <StatusTabs
+                active={activeTab}
+                counts={counts}
+                onChange={setActiveTab}
+              />
+
+              {/* المحتوى */}
+              {ordersError ? (
+                <ErrorState onRetry={refetchOrders} />
+              ) : ordersLoading ? (
+                <LoadingState />
+              ) : visibleOrders.length === 0 ? (
+                <EmptyState
+                  message={
+                    activeTab === 'all'
+                      ? 'لا توجد طلبات بعد'
+                      : 'لا توجد طلبات في هذا التبويب'
+                  }
                 />
-              ))}
-            </div>
+              ) : (
+                <div className="grid grid-cols-[repeat(auto-fill,minmax(320px,1fr))] gap-4">
+                  {visibleOrders.map((order) => (
+                    <OrderCard
+                      key={order.id}
+                      order={order}
+                      dailyNumber={dailyNumbers.get(order.id)}
+                      isNew={newIds.has(order.id)}
+                      isCancelledFlash={cancelledIds.has(order.id)}
+                      onStatusChange={handleStatusChange}
+                      onAcknowledge={handleAcknowledge}
+                      onAcknowledgeCancel={() => handleAcknowledgeCancel(order.id)}
+                      onQuickReply={handleQuickReply}
+                      onOpenConversation={openConversation}
+                    />
+                  ))}
+                </div>
+              )}
+            </>
+          ) : (
+            <ConversationCenter
+              orders={orders}
+              selectedPhone={selectedPhone}
+              onSelectPhone={setSelectedPhone}
+            />
           )}
 
           <footer className="pt-4 pb-8 text-center text-xs text-zinc-600">

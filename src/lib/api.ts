@@ -3,9 +3,10 @@ import {
   ORDERS_TABLE,
   SETTINGS_TABLE,
   SETTINGS_ROW_ID,
+  NOTES_TABLE,
 } from './supabase'
 import { CONFIRMED_TIMES } from './constants'
-import type { OrderStatus, TimeStatus } from '../types'
+import type { CustomerNote, OrderStatus, TimeStatus } from '../types'
 
 /** تغيير حالة الطلب */
 export async function updateOrderStatus(id: string, status: OrderStatus) {
@@ -95,5 +96,32 @@ export async function updateGeneralWaitTime(general_wait_time: number) {
     .from(SETTINGS_TABLE)
     .update({ general_wait_time })
     .eq('id', SETTINGS_ROW_ID)
+  if (error) throw error
+}
+
+// ===== الملاحظات الداخلية عن الزبائن (لا تُرسَل للزبون) =====
+
+/** جلب ملاحظات زبون مرتّبة من الأحدث للأقدم */
+export async function fetchCustomerNotes(phone: string): Promise<CustomerNote[]> {
+  const { data, error } = await supabase
+    .from(NOTES_TABLE)
+    .select('*')
+    .eq('customer_phone', phone)
+    .order('created_at', { ascending: false })
+  if (error) throw error
+  return (data as CustomerNote[]) ?? []
+}
+
+/** إضافة ملاحظة داخلية لزبون */
+export async function addCustomerNote(phone: string, body: string) {
+  const { error } = await supabase
+    .from(NOTES_TABLE)
+    .insert({ customer_phone: phone, body })
+  if (error) throw error
+}
+
+/** حذف ملاحظة داخلية */
+export async function deleteCustomerNote(id: string) {
+  const { error } = await supabase.from(NOTES_TABLE).delete().eq('id', id)
   if (error) throw error
 }

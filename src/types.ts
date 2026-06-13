@@ -49,3 +49,24 @@ export interface RestaurantSettings {
 
 /** قيمة التبويبات — الكل بالإضافة إلى الحالات الرئيسية + الملغية */
 export type TabKey = 'all' | 'new' | 'preparing' | 'ready' | 'on_the_way' | 'delivered' | 'cancelled'
+
+/** اتجاه الرسالة: وارد من الزبون أو صادر من البوت/المطعم */
+export type MessageDirection = 'in' | 'out'
+
+/** صف رسالة محادثة كما هو في جدول messages */
+export interface Message {
+  id: string
+  customer_phone: string
+  customer_name: string | null
+  direction: MessageDirection
+  body: string | null
+  created_at: string
+}
+
+/** ملاحظة داخلية عن زبون (لا تُرسَل له) كما في جدول customer_notes */
+export interface CustomerNote {
+  id: string
+  customer_phone: string
+  body: string
+  created_at: string
+}

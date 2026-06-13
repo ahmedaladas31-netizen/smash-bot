@@ -4,6 +4,7 @@ import {
   Clock,
   MapPin,
   MessageCircle,
+  MessagesSquare,
   Phone,
   ShoppingBag,
   Store,
@@ -46,6 +47,8 @@ function ageChipClass(minutes: number): string {
 
 interface OrderCardProps {
   order: Order
+  /** الرقم التسلسلي اليومي للطلب (محسوب بالواجهة) */
+  dailyNumber?: number
   /** طلب وصل للتو → تمييز بصري لافت */
   isNew?: boolean
   /** طلب أُلغي للتو → وميض أحمر + بانر المراجعة */
@@ -58,16 +61,20 @@ interface OrderCardProps {
     phone: string | null,
     reply: QuickReply,
   ) => Promise<void>
+  /** فتح محادثة هذا الزبون في مركز المحادثات */
+  onOpenConversation?: (phone: string) => void
 }
 
 export default function OrderCard({
   order,
+  dailyNumber,
   isNew,
   isCancelledFlash,
   onStatusChange,
   onAcknowledge,
   onAcknowledgeCancel,
   onQuickReply,
+  onOpenConversation,
 }: OrderCardProps) {
   const [pending, setPending] = useState(false)
   const meta = STATUS_META[order.status]
@@ -139,9 +146,18 @@ export default function OrderCard({
       )}
 
       <div className="space-y-4 p-4 sm:p-5">
-        {/* الترويسة: الاسم + الوقت + الحالة */}
+        {/* الترويسة: الرقم + الاسم + الوقت + الحالة */}
         <div className="flex items-start justify-between gap-3">
-          <div className="min-w-0">
+          <div className="flex min-w-0 items-start gap-2.5">
+            {dailyNumber != null && (
+              <span
+                className="nums inline-flex shrink-0 items-center rounded-lg bg-brand-500/15 px-2 py-1 text-lg font-black text-brand-300 ring-1 ring-brand-500/40"
+                title="رقم الطلب اليومي"
+              >
+                #{dailyNumber}
+              </span>
+            )}
+            <div className="min-w-0">
             <div className="flex items-center gap-2">
               <User className="h-4 w-4 shrink-0 text-brand-400" />
               <h3 className="truncate text-base font-bold text-zinc-300">
@@ -158,6 +174,7 @@ export default function OrderCard({
               <Clock className="h-3.5 w-3.5" />
               <span>{formatRelativeTime(order.created_at)}</span>
             </div>
+            </div>
           </div>
           <StatusBadge status={order.status} />
         </div>
@@ -170,15 +187,28 @@ export default function OrderCard({
               {displayPhone(order.customer_phone)}
             </span>
           </div>
-          <a
-            href={phoneToWaLink(order.customer_phone)}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-600 px-3 py-1.5 text-sm font-bold text-white transition-colors hover:bg-emerald-500 active:scale-95"
-          >
-            <MessageCircle className="h-4 w-4" />
-            واتساب
-          </a>
+          <div className="flex shrink-0 items-center gap-2">
+            {onOpenConversation && order.customer_phone && (
+              <button
+                type="button"
+                onClick={() => onOpenConversation(order.customer_phone)}
+                title="فتح المحادثة في مركز المحادثات"
+                className="inline-flex items-center gap-1.5 rounded-lg bg-coal-700 px-3 py-1.5 text-sm font-bold text-zinc-200 ring-1 ring-coal-600 transition-colors hover:bg-coal-600 active:scale-95"
+              >
+                <MessagesSquare className="h-4 w-4" />
+                المحادثة
+              </button>
+            )}
+            <a
+              href={phoneToWaLink(order.customer_phone)}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-600 px-3 py-1.5 text-sm font-bold text-white transition-colors hover:bg-emerald-500 active:scale-95"
+            >
+              <MessageCircle className="h-4 w-4" />
+              واتساب
+            </a>
+          </div>
         </div>
 
         {/* وصف الطلب — العنصر الأبرز في البطاقة */}

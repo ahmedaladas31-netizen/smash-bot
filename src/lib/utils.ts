@@ -1,4 +1,4 @@
-import type { ParsedItems } from '../types'
+import type { Order, ParsedItems } from '../types'
 
 /** نتيجة فك حقل items — كل الحقول نصوص بقيمة افتراضية فارغة */
 export interface ParsedItemsResult {
@@ -141,4 +141,34 @@ export function formatShekel(total: number | null): string {
 /** دمج أصناف className بشكل آمن */
 export function cx(...classes: Array<string | false | null | undefined>): string {
   return classes.filter(Boolean).join(' ')
+}
+
+/** مفتاح اليوم (YYYY-MM-DD) بتوقيت المطعم Asia/Hebron — للتجميع اليومي */
+function hebronDayKey(dateStr: string): string {
+  const d = new Date(dateStr)
+  if (Number.isNaN(d.getTime())) return 'invalid'
+  // en-CA يعطي صيغة YYYY-MM-DD
+  return new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Hebron' }).format(d)
+}
+
+/**
+ * يحسب رقماً تسلسلياً يومياً لكل طلب (بالوصول، يشمل كل الحالات).
+ * الترقيم يبدأ من 1 لكل يوم بتوقيت Asia/Hebron ويتصفّر تلقائياً عند منتصف الليل.
+ * يُعيد خريطة id → رقم. محسوب بالكامل من البيانات المحمّلة (بدون أي تخزين).
+ */
+export function computeDailyNumbers(orders: Order[]): Map<string, number> {
+  const byDay = new Map<string, { id: string; t: number }[]>()
+  for (const o of orders) {
+    const key = hebronDayKey(o.created_at)
+    const arr = byDay.get(key)
+    const entry = { id: o.id, t: new Date(o.created_at).getTime() }
+    if (arr) arr.push(entry)
+    else byDay.set(key, [entry])
+  }
+  const numbers = new Map<string, number>()
+  for (const arr of byDay.values()) {
+    arr.sort((a, b) => a.t - b.t)
+    arr.forEach((entry, i) => numbers.set(entry.id, i + 1))
+  }
+  return numbers
 }

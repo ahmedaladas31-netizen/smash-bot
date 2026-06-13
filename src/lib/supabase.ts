@@ -38,3 +38,7 @@ export const ORDERS_TABLE = 'orders'
 export const SETTINGS_TABLE = 'restaurant_settings'
 /** معرّف صف الإعدادات الوحيد */
 export const SETTINGS_ROW_ID = 1
+/** اسم جدول رسائل المحادثات */
+export const MESSAGES_TABLE = 'messages'
+/** اسم جدول ملاحظات الزبائن الداخلية */
+export const NOTES_TABLE = 'customer_notes'
