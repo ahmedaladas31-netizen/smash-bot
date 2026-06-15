@@ -7,6 +7,7 @@ import StatusTabs from './components/StatusTabs'
 import OrderCard from './components/OrderCard'
 import ConversationCenter from './components/ConversationCenter'
 import PausedSessionsPanel from './components/PausedSessionsPanel'
+import WorkingHoursSettings from './components/WorkingHoursSettings'
 import {
   ConfigState,
   EmptyState,
@@ -25,7 +26,9 @@ import {
   updateBusyMode,
   updateGeneralWaitTime,
   updateOrderStatus,
+  updateWorkingHours,
   unpauseSession,
+  type WorkingHoursPatch,
 } from './lib/api'
 import { sendCustomerReply } from './lib/webhook'
 import type { QuickReply } from './lib/constants'
@@ -184,6 +187,10 @@ export default function App() {
   ordersRef.current = orders
 
   const { settings, patchSettings } = useSettings()
+
+  // مرجع لأحدث الإعدادات (لقراءة القيم السابقة داخل المعالِجات دون إعادة إنشائها)
+  const settingsRef = useRef(settings)
+  settingsRef.current = settings
 
   // ===== المحادثات الموقوفة (تدخّل بشري) =====
   const {
@@ -444,6 +451,31 @@ export default function App() {
     [removePausedLocal, refetchPaused],
   )
 
+  // ===== دوام المطعم =====
+  const weekdayOpen = settings?.weekday_open ?? 10
+  const weekdayClose = settings?.weekday_close ?? 24
+  const fridayOpen = settings?.friday_open ?? 16
+  const fridayClose = settings?.friday_close ?? 24
+
+  const handleHoursChange = useCallback(
+    async (patch: WorkingHoursPatch) => {
+      // لقطة القيم السابقة للحقول المُعدَّلة فقط (للتراجع عند الفشل)
+      const prev: WorkingHoursPatch = {}
+      for (const key of Object.keys(patch) as (keyof WorkingHoursPatch)[]) {
+        prev[key] = settingsRef.current?.[key] ?? null
+      }
+      patchSettings(patch)
+      try {
+        await updateWorkingHours(patch)
+      } catch (e) {
+        console.error(e)
+        patchSettings(prev)
+        alert('تعذّر حفظ دوام المطعم، حاول مرة أخرى.')
+      }
+    },
+    [patchSettings],
+  )
+
   // ===== شاشات الحالة =====
   if (!isSupabaseConfigured) {
     return (
@@ -514,6 +546,14 @@ export default function App() {
                 onToggle={handleToggleBusy}
                 onDelayChange={handleDelayChange}
                 onWaitTimeChange={handleWaitTimeChange}
+              />
+
+              <WorkingHoursSettings
+                weekdayOpen={weekdayOpen}
+                weekdayClose={weekdayClose}
+                fridayOpen={fridayOpen}
+                fridayClose={fridayClose}
+                onCommit={handleHoursChange}
               />
 
               <StatusTabs

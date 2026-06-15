@@ -11,8 +11,17 @@ import type {
   CustomerNote,
   OrderStatus,
   PausedSession,
+  RestaurantSettings,
   TimeStatus,
 } from '../types'
+
+/** حقول دوام المطعم القابلة للتحديث */
+export type WorkingHoursPatch = Partial<
+  Pick<
+    RestaurantSettings,
+    'weekday_open' | 'weekday_close' | 'friday_open' | 'friday_close'
+  >
+>
 
 /** تغيير حالة الطلب */
 export async function updateOrderStatus(id: string, status: OrderStatus) {
@@ -110,6 +119,15 @@ export async function updateBotGloballyPaused(bot_globally_paused: boolean) {
   const { error } = await supabase
     .from(SETTINGS_TABLE)
     .update({ bot_globally_paused })
+    .eq('id', SETTINGS_ROW_ID)
+  if (error) throw error
+}
+
+/** تحديث دوام المطعم (أي مجموعة من حقول الساعات) */
+export async function updateWorkingHours(patch: WorkingHoursPatch) {
+  const { error } = await supabase
+    .from(SETTINGS_TABLE)
+    .update(patch)
     .eq('id', SETTINGS_ROW_ID)
   if (error) throw error
 }

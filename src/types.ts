@@ -47,6 +47,11 @@ export interface RestaurantSettings {
   general_wait_time: number | null
   /** عند true: البوت موقوف عن كل الزبائن (تدخّل بشري كامل) */
   bot_globally_paused?: boolean | null
+  /** دوام المطعم بنظام 24 ساعة — ساعة الفتح/الإغلاق أيام الأسبوع والجمعة */
+  weekday_open?: number | null
+  weekday_close?: number | null
+  friday_open?: number | null
+  friday_close?: number | null
 }
 
 /** سبب إيقاف محادثة في جدول paused_sessions */

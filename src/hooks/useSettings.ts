@@ -22,6 +22,10 @@ const DEFAULT_SETTINGS: RestaurantSettings = {
   busy_delay: 30,
   general_wait_time: 20,
   bot_globally_paused: false,
+  weekday_open: 10,
+  weekday_close: 24,
+  friday_open: 16,
+  friday_close: 24,
 }
 
 export function useSettings(): UseSettingsResult {
