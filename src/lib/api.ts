@@ -12,6 +12,7 @@ import type {
   CustomerNote,
   FaqItem,
   OrderStatus,
+  PauseReason,
   PausedSession,
   RestaurantSettings,
   TimeStatus,
@@ -144,6 +145,23 @@ export async function fetchPausedSessions(): Promise<PausedSession[]> {
     .order('paused_at', { ascending: false })
   if (error) throw error
   return (data as PausedSession[]) ?? []
+}
+
+/**
+ * إيقاف البوت يدوياً عن زبون — إضافة/تحديث صف في paused_sessions.
+ * upsert على المفتاح customer_phone حتى لا يفشل لو كان موقوفاً مسبقاً.
+ */
+export async function pauseSession(
+  customer_phone: string,
+  reason: PauseReason = 'manual',
+) {
+  const { error } = await supabase
+    .from(PAUSED_SESSIONS_TABLE)
+    .upsert(
+      { customer_phone, reason, paused_at: new Date().toISOString() },
+      { onConflict: 'customer_phone' },
+    )
+  if (error) throw error
 }
 
 /** فك إيقاف محادثة — حذف الصف ليعود البوت للرد على هذا الرقم */

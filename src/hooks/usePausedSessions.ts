@@ -14,6 +14,8 @@ interface UsePausedSessionsResult {
   /** متصل بالـ Realtime؟ */
   connected: boolean
   refetch: () => Promise<void>
+  /** إضافة/تحديث محلي متفائل (يُستخدم فور الإيقاف اليدوي) */
+  upsertLocal: (session: PausedSession) => void
   /** حذف محلي متفائل (يُستخدم فور فك الإيقاف لتبدو فورية) */
   removeLocal: (phone: string) => void
 }
@@ -54,6 +56,18 @@ export function usePausedSessions(): UsePausedSessionsResult {
     } finally {
       setLoading(false)
     }
+  }, [])
+
+  const upsertLocal = useCallback((session: PausedSession) => {
+    setSessions((prev) => {
+      const rest = prev.filter(
+        (s) => s.customer_phone !== session.customer_phone,
+      )
+      return [session, ...rest].sort(
+        (a, b) =>
+          new Date(b.paused_at).getTime() - new Date(a.paused_at).getTime(),
+      )
+    })
   }, [])
 
   const removeLocal = useCallback((phone: string) => {
@@ -122,6 +136,7 @@ export function usePausedSessions(): UsePausedSessionsResult {
     error,
     connected,
     refetch: fetchSessions,
+    upsertLocal,
     removeLocal,
   }
 }

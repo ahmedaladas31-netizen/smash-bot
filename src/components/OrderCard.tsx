@@ -2,10 +2,12 @@ import { useState } from 'react'
 import {
   Bell,
   Clock,
+  Hand,
   MapPin,
   MessageCircle,
   MessagesSquare,
   Phone,
+  Play,
   ShoppingBag,
   Store,
   Truck,
@@ -53,6 +55,8 @@ interface OrderCardProps {
   isNew?: boolean
   /** طلب أُلغي للتو → وميض أحمر + بانر المراجعة */
   isCancelledFlash?: boolean
+  /** البوت موقوف عن هذا الزبون (موجود في paused_sessions) */
+  isPaused?: boolean
   onStatusChange: (id: string, status: OrderStatus) => Promise<void>
   onAcknowledge: (id: string) => Promise<void>
   onAcknowledgeCancel?: () => void
@@ -63,6 +67,10 @@ interface OrderCardProps {
   ) => Promise<void>
   /** فتح محادثة هذا الزبون في مركز المحادثات */
   onOpenConversation?: (phone: string) => void
+  /** إيقاف البوت يدوياً عن هذا الزبون */
+  onManualPause?: (phone: string) => Promise<void> | void
+  /** إعادة تشغيل البوت لهذا الزبون (فك الإيقاف) */
+  onResumeBot?: (phone: string) => Promise<void> | void
 }
 
 export default function OrderCard({
@@ -70,11 +78,14 @@ export default function OrderCard({
   dailyNumber,
   isNew,
   isCancelledFlash,
+  isPaused,
   onStatusChange,
   onAcknowledge,
   onAcknowledgeCancel,
   onQuickReply,
   onOpenConversation,
+  onManualPause,
+  onResumeBot,
 }: OrderCardProps) {
   const [pending, setPending] = useState(false)
   const meta = STATUS_META[order.status]
@@ -104,6 +115,8 @@ export default function OrderCard({
         'relative overflow-hidden rounded-2xl border border-coal-700 bg-coal-800/80 shadow-xl ring-1 ring-black/20 backdrop-blur-sm',
         'border-r-4',
         meta.cardAccent,
+        // الطلبات المكتملة تُخفَّت لتبرز النشطة
+        order.status === 'delivered' && 'opacity-70',
         isNew && !isCancelledFlash && 'animate-pulse-ring ring-2 ring-brand-400/70',
         asked && !isCancelledFlash && 'ring-2 ring-amber-400 ring-offset-2 ring-offset-coal-950',
         isCancelledFlash &&
@@ -176,7 +189,18 @@ export default function OrderCard({
             </div>
             </div>
           </div>
-          <StatusBadge status={order.status} />
+          <div className="flex shrink-0 flex-col items-end gap-1.5">
+            <StatusBadge status={order.status} />
+            {isPaused && (
+              <span
+                className="inline-flex items-center gap-1 rounded-md bg-flame-600/20 px-2 py-0.5 text-[11px] font-bold text-flame-300 ring-1 ring-flame-500/40"
+                title="البوت موقوف عن هذا الزبون — أنت تردّ يدوياً"
+              >
+                <Hand className="h-3 w-3" />
+                البوت موقوف
+              </span>
+            )}
+          </div>
         </div>
 
         {/* الهاتف + واتساب */}
@@ -210,6 +234,46 @@ export default function OrderCard({
             </a>
           </div>
         </div>
+
+        {/* تدخل يدوي: إيقاف/تشغيل البوت عن هذا الزبون */}
+        {order.customer_phone && (onManualPause || onResumeBot) && (
+          <button
+            type="button"
+            disabled={pending}
+            onClick={() =>
+              run(() =>
+                Promise.resolve(
+                  isPaused
+                    ? onResumeBot?.(order.customer_phone)
+                    : onManualPause?.(order.customer_phone),
+                ),
+              )
+            }
+            title={
+              isPaused
+                ? 'البوت موقوف عن هذا الزبون — اضغط لإعادة تشغيله'
+                : 'إيقاف البوت والرد يدوياً على هذا الزبون'
+            }
+            className={cx(
+              'flex w-full items-center justify-center gap-2 rounded-xl px-3 py-2 text-sm font-bold transition-all active:scale-95 disabled:opacity-50',
+              isPaused
+                ? 'bg-emerald-600 text-white ring-1 ring-emerald-500 hover:bg-emerald-500'
+                : 'bg-amber-500/10 text-amber-300 ring-1 ring-amber-500/40 hover:bg-amber-500/20',
+            )}
+          >
+            {isPaused ? (
+              <>
+                <Play className="h-4 w-4" />
+                تشغيل البوت
+              </>
+            ) : (
+              <>
+                <Hand className="h-4 w-4" />
+                تدخل يدوي
+              </>
+            )}
+          </button>
+        )}
 
         {/* وصف الطلب — العنصر الأبرز في البطاقة */}
         <div className="rounded-xl bg-coal-900/60 p-3.5 ring-1 ring-coal-700">

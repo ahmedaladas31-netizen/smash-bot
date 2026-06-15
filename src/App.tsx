@@ -28,6 +28,7 @@ import {
   updateGeneralWaitTime,
   updateOrderStatus,
   updateWorkingHours,
+  pauseSession,
   unpauseSession,
   type WorkingHoursPatch,
 } from './lib/api'
@@ -199,6 +200,7 @@ export default function App() {
     loading: pausedLoading,
     connected: pausedConnected,
     refetch: refetchPaused,
+    upsertLocal: upsertPausedLocal,
     removeLocal: removePausedLocal,
   } = usePausedSessions()
 
@@ -452,6 +454,27 @@ export default function App() {
     [removePausedLocal, refetchPaused],
   )
 
+  // إيقاف البوت يدوياً عن زبون من بطاقة الطلب (reason='manual')
+  const handleManualPause = useCallback(
+    async (phone: string) => {
+      if (!phone) return
+      upsertPausedLocal({
+        customer_phone: phone,
+        reason: 'manual',
+        paused_at: new Date().toISOString(),
+      })
+      try {
+        await pauseSession(phone, 'manual')
+      } catch (e) {
+        console.error(e)
+        removePausedLocal(phone)
+        await refetchPaused()
+        alert('تعذّر إيقاف البوت لهذا الزبون، حاول مرة أخرى.')
+      }
+    },
+    [upsertPausedLocal, removePausedLocal, refetchPaused],
+  )
+
   // ===== دوام المطعم =====
   const weekdayOpen = settings?.weekday_open ?? 10
   const weekdayClose = settings?.weekday_close ?? 24
@@ -598,11 +621,14 @@ export default function App() {
                       dailyNumber={dailyNumbers.get(order.id)}
                       isNew={newIds.has(order.id)}
                       isCancelledFlash={cancelledIds.has(order.id)}
+                      isPaused={pausedPhones.has(order.customer_phone)}
                       onStatusChange={handleStatusChange}
                       onAcknowledge={handleAcknowledge}
                       onAcknowledgeCancel={() => handleAcknowledgeCancel(order.id)}
                       onQuickReply={handleQuickReply}
                       onOpenConversation={openConversation}
+                      onManualPause={handleManualPause}
+                      onResumeBot={handleUnpauseSession}
                     />
                   ))}
                 </div>
