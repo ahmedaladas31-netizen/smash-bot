@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { ClipboardList, MessagesSquare } from 'lucide-react'
+import { ClipboardList, HelpCircle, MessagesSquare } from 'lucide-react'
 import Header from './components/Header'
 import BusyModeBar from './components/BusyModeBar'
 import BusyModeToggle from './components/BusyModeToggle'
@@ -8,6 +8,7 @@ import OrderCard from './components/OrderCard'
 import ConversationCenter from './components/ConversationCenter'
 import PausedSessionsPanel from './components/PausedSessionsPanel'
 import WorkingHoursSettings from './components/WorkingHoursSettings'
+import FaqManager from './components/FaqManager'
 import {
   ConfigState,
   EmptyState,
@@ -82,7 +83,7 @@ function priorityRank(o: Order, cancelledIds: Set<string>): number {
 
 export default function App() {
   const [activeTab, setActiveTab] = useState<TabKey>('all')
-  const [view, setView] = useState<'orders' | 'conversations'>('orders')
+  const [view, setView] = useState<'orders' | 'conversations' | 'faq'>('orders')
   const [selectedPhone, setSelectedPhone] = useState<string | null>(null)
   const [soundOn, setSoundOn] = useState<boolean>(() => {
     const saved = localStorage.getItem(SOUND_KEY)
@@ -527,6 +528,19 @@ export default function App() {
               <MessagesSquare className="h-5 w-5" />
               المحادثات
             </button>
+            <button
+              type="button"
+              onClick={() => setView('faq')}
+              className={cx(
+                'inline-flex items-center gap-2 rounded-xl px-4 py-2 text-base font-bold transition-all active:scale-95',
+                view === 'faq'
+                  ? 'bg-gradient-to-l from-brand-600 to-flame-700 text-white shadow-lg shadow-brand-600/25'
+                  : 'bg-coal-800/80 text-zinc-300 ring-1 ring-coal-700 hover:bg-coal-700',
+              )}
+            >
+              <HelpCircle className="h-5 w-5" />
+              الأسئلة الشائعة
+            </button>
           </div>
 
           {/* محادثات بحاجة تدخل — تظهر في الواجهتين عند وجود إيقاف */}
@@ -594,13 +608,15 @@ export default function App() {
                 </div>
               )}
             </>
-          ) : (
+          ) : view === 'conversations' ? (
             <ConversationCenter
               orders={orders}
               selectedPhone={selectedPhone}
               onSelectPhone={setSelectedPhone}
               pausedPhones={pausedPhones}
             />
+          ) : (
+            <FaqManager />
           )}
 
           <footer className="pt-4 pb-8 text-center text-xs text-zinc-600">

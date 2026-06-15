@@ -44,3 +44,5 @@ export const MESSAGES_TABLE = 'messages'
 export const NOTES_TABLE = 'customer_notes'
 /** اسم جدول المحادثات الموقوفة (تدخّل بشري) */
 export const PAUSED_SESSIONS_TABLE = 'paused_sessions'
+/** اسم جدول الأسئلة الشائعة */
+export const FAQ_TABLE = 'faq'

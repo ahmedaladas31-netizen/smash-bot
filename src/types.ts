@@ -90,3 +90,14 @@ export interface CustomerNote {
   body: string
   created_at: string
 }
+
+/** سؤال شائع كما هو في جدول faq */
+export interface FaqItem {
+  id: number
+  question: string
+  answer: string
+  category: string | null
+  /** true = البوت يستخدمه، false = مخفي */
+  active: boolean
+  created_at: string
+}

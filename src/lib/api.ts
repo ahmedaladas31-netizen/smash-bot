@@ -5,10 +5,12 @@ import {
   SETTINGS_ROW_ID,
   NOTES_TABLE,
   PAUSED_SESSIONS_TABLE,
+  FAQ_TABLE,
 } from './supabase'
 import { CONFIRMED_TIMES } from './constants'
 import type {
   CustomerNote,
+  FaqItem,
   OrderStatus,
   PausedSession,
   RestaurantSettings,
@@ -177,5 +179,50 @@ export async function addCustomerNote(phone: string, body: string) {
 /** حذف ملاحظة داخلية */
 export async function deleteCustomerNote(id: string) {
   const { error } = await supabase.from(NOTES_TABLE).delete().eq('id', id)
+  if (error) throw error
+}
+
+// ===== الأسئلة الشائعة (faq) =====
+
+/** الحقول القابلة للتعديل في سؤال شائع */
+export type FaqPatch = Partial<
+  Pick<FaqItem, 'question' | 'answer' | 'category' | 'active'>
+>
+
+/** جلب كل الأسئلة الشائعة مرتّبة بالفئة ثم تاريخ الإنشاء */
+export async function fetchFaq(): Promise<FaqItem[]> {
+  const { data, error } = await supabase
+    .from(FAQ_TABLE)
+    .select('*')
+    .order('category', { ascending: true })
+    .order('created_at', { ascending: true })
+  if (error) throw error
+  return (data as FaqItem[]) ?? []
+}
+
+/** إضافة سؤال جديد — يعيد الصف المُدرَج */
+export async function addFaq(input: {
+  question: string
+  answer: string
+  category: string | null
+}): Promise<FaqItem> {
+  const { data, error } = await supabase
+    .from(FAQ_TABLE)
+    .insert({ ...input, active: true })
+    .select()
+    .single()
+  if (error) throw error
+  return data as FaqItem
+}
+
+/** تعديل سؤال (السؤال/الجواب/الفئة/التفعيل) */
+export async function updateFaq(id: number, patch: FaqPatch) {
+  const { error } = await supabase.from(FAQ_TABLE).update(patch).eq('id', id)
+  if (error) throw error
+}
+
+/** حذف سؤال */
+export async function deleteFaq(id: number) {
+  const { error } = await supabase.from(FAQ_TABLE).delete().eq('id', id)
   if (error) throw error
 }
