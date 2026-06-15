@@ -17,6 +17,7 @@ import {
 import StatusBadge from './StatusBadge'
 import StatusButtons from './StatusButtons'
 import QuickReplies from './QuickReplies'
+import ManualReply from './ManualReply'
 import { STATUS_META } from '../lib/constants'
 import {
   ageMinutes,
@@ -344,6 +345,14 @@ export default function OrderCard({
             onQuickReply(order.id, order.customer_phone, reply)
           }
         />
+
+        {/* رسالة يدوية حرّة — تظهر فقط حين يكون البوت موقوفاً عن الزبون */}
+        {isPaused && (
+          <>
+            <div className="h-px bg-coal-700" />
+            <ManualReply phone={order.customer_phone} />
+          </>
+        )}
       </div>
     </article>
   )
