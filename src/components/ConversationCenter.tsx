@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef } from 'react'
 import {
   Bot,
+  Hand,
   MapPin,
   MessageCircle,
   Phone,
@@ -28,6 +29,18 @@ interface ConversationCenterProps {
   /** الرقم المختار حالياً (مُتحكَّم به من App ليفتح من بطاقة الطلب) */
   selectedPhone: string | null
   onSelectPhone: (phone: string) => void
+  /** أرقام الزبائن الموقوف عنهم البوت (تدخّل بشري) */
+  pausedPhones: Set<string>
+}
+
+/** شارة "موقوف — تدخل يدوي" بجانب الزبائن الموقوف عنهم البوت */
+function PausedBadge() {
+  return (
+    <span className="inline-flex w-fit items-center gap-1 rounded-md bg-amber-500/15 px-2 py-0.5 text-[11px] font-bold text-amber-300 ring-1 ring-amber-500/40">
+      <Hand className="h-3 w-3" />
+      موقوف — تدخل يدوي
+    </span>
+  )
 }
 
 /** وقت قصير HH:MM بتوقيت المطعم */
@@ -45,6 +58,7 @@ export default function ConversationCenter({
   orders,
   selectedPhone,
   onSelectPhone,
+  pausedPhones,
 }: ConversationCenterProps) {
   const { messages, conversations, loading, error, connected } =
     useConversations()
@@ -124,6 +138,7 @@ export default function ConversationCenter({
                 key={conv.phone}
                 conv={conv}
                 active={conv.phone === activePhone}
+                paused={pausedPhones.has(conv.phone)}
                 orderStatus={
                   orders.find((o) => o.customer_phone === conv.phone)?.status ??
                   null
@@ -147,6 +162,7 @@ export default function ConversationCenter({
               <span className="nums text-xs text-zinc-500">
                 {displayPhone(activePhone)}
               </span>
+              {pausedPhones.has(activePhone) && <PausedBadge />}
             </div>
             <div className="scroll-thin flex-1 space-y-2 overflow-y-auto p-4">
               {thread.map((m) => (
@@ -212,11 +228,13 @@ export default function ConversationCenter({
 function ConversationListRow({
   conv,
   active,
+  paused,
   orderStatus,
   onClick,
 }: {
   conv: Conversation
   active: boolean
+  paused: boolean
   orderStatus: Order['status'] | null
   onClick: () => void
 }) {
@@ -245,15 +263,20 @@ function ConversationListRow({
           {conv.lastBody || '—'}
         </span>
       </div>
-      {orderStatus && (
-        <span
-          className={cx(
-            'mt-0.5 inline-flex w-fit rounded-md px-2 py-0.5 text-[11px] font-bold',
-            STATUS_META[orderStatus].badge,
+      {(orderStatus || paused) && (
+        <div className="mt-0.5 flex flex-wrap items-center gap-1.5">
+          {orderStatus && (
+            <span
+              className={cx(
+                'inline-flex w-fit rounded-md px-2 py-0.5 text-[11px] font-bold',
+                STATUS_META[orderStatus].badge,
+              )}
+            >
+              {STATUS_META[orderStatus].label}
+            </span>
           )}
-        >
-          {STATUS_META[orderStatus].label}
-        </span>
+          {paused && <PausedBadge />}
+        </div>
       )}
     </button>
   )

@@ -4,9 +4,15 @@ import {
   SETTINGS_TABLE,
   SETTINGS_ROW_ID,
   NOTES_TABLE,
+  PAUSED_SESSIONS_TABLE,
 } from './supabase'
 import { CONFIRMED_TIMES } from './constants'
-import type { CustomerNote, OrderStatus, TimeStatus } from '../types'
+import type {
+  CustomerNote,
+  OrderStatus,
+  PausedSession,
+  TimeStatus,
+} from '../types'
 
 /** تغيير حالة الطلب */
 export async function updateOrderStatus(id: string, status: OrderStatus) {
@@ -96,6 +102,36 @@ export async function updateGeneralWaitTime(general_wait_time: number) {
     .from(SETTINGS_TABLE)
     .update({ general_wait_time })
     .eq('id', SETTINGS_ROW_ID)
+  if (error) throw error
+}
+
+/** إيقاف/تشغيل البوت عن كل الزبائن (تدخّل بشري كامل) */
+export async function updateBotGloballyPaused(bot_globally_paused: boolean) {
+  const { error } = await supabase
+    .from(SETTINGS_TABLE)
+    .update({ bot_globally_paused })
+    .eq('id', SETTINGS_ROW_ID)
+  if (error) throw error
+}
+
+// ===== المحادثات الموقوفة (تدخّل بشري) =====
+
+/** جلب كل المحادثات الموقوفة مرتّبة من الأحدث للأقدم */
+export async function fetchPausedSessions(): Promise<PausedSession[]> {
+  const { data, error } = await supabase
+    .from(PAUSED_SESSIONS_TABLE)
+    .select('*')
+    .order('paused_at', { ascending: false })
+  if (error) throw error
+  return (data as PausedSession[]) ?? []
+}
+
+/** فك إيقاف محادثة — حذف الصف ليعود البوت للرد على هذا الرقم */
+export async function unpauseSession(customer_phone: string) {
+  const { error } = await supabase
+    .from(PAUSED_SESSIONS_TABLE)
+    .delete()
+    .eq('customer_phone', customer_phone)
   if (error) throw error
 }
 

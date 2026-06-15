@@ -1,17 +1,23 @@
-import { Beef, Volume2, VolumeX, Wifi, WifiOff } from 'lucide-react'
+import { Beef, Bot, Power, Volume2, VolumeX, Wifi, WifiOff } from 'lucide-react'
 import { cx } from '../lib/utils'
 
 interface HeaderProps {
   connected: boolean
   soundOn: boolean
   onToggleSound: () => void
+  /** البوت موقوف عن كل الزبائن؟ */
+  botGloballyPaused: boolean
+  /** تبديل إيقاف/تشغيل البوت عن كل الزبائن */
+  onToggleBotPause: () => void
 }
 
-/** ترويسة اللوحة: الهوية + حالة الاتصال + التحكم بالصوت */
+/** ترويسة اللوحة: الهوية + حالة الاتصال + التحكم بالصوت + إيقاف البوت العام */
 export default function Header({
   connected,
   soundOn,
   onToggleSound,
+  botGloballyPaused,
+  onToggleBotPause,
 }: HeaderProps) {
   return (
     <header className="flex items-center justify-between gap-3">
@@ -30,6 +36,32 @@ export default function Header({
       </div>
 
       <div className="flex items-center gap-2">
+        {/* إيقاف/تشغيل البوت عن كل الزبائن */}
+        <button
+          type="button"
+          onClick={onToggleBotPause}
+          role="switch"
+          aria-checked={botGloballyPaused}
+          title={
+            botGloballyPaused
+              ? 'البوت موقوف عن الجميع — اضغط لإعادة تشغيله'
+              : 'البوت يعمل — اضغط لإيقافه عن الجميع'
+          }
+          className={cx(
+            'inline-flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-sm font-bold ring-1 transition-colors active:scale-95',
+            botGloballyPaused
+              ? 'bg-flame-600 text-white ring-flame-500 hover:bg-flame-500'
+              : 'bg-emerald-500/15 text-emerald-300 ring-emerald-500/40 hover:bg-emerald-500/25',
+          )}
+        >
+          {botGloballyPaused ? (
+            <Power className="h-4 w-4" />
+          ) : (
+            <Bot className="h-4 w-4" />
+          )}
+          {botGloballyPaused ? 'البوت موقوف' : 'البوت يعمل'}
+        </button>
+
         {/* حالة الاتصال اللحظي */}
         <span
           title={connected ? 'متصل لحظياً' : 'غير متصل'}

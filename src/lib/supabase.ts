@@ -42,3 +42,5 @@ export const SETTINGS_ROW_ID = 1
 export const MESSAGES_TABLE = 'messages'
 /** اسم جدول ملاحظات الزبائن الداخلية */
 export const NOTES_TABLE = 'customer_notes'
+/** اسم جدول المحادثات الموقوفة (تدخّل بشري) */
+export const PAUSED_SESSIONS_TABLE = 'paused_sessions'

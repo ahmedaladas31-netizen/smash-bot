@@ -6,6 +6,7 @@ import BusyModeToggle from './components/BusyModeToggle'
 import StatusTabs from './components/StatusTabs'
 import OrderCard from './components/OrderCard'
 import ConversationCenter from './components/ConversationCenter'
+import PausedSessionsPanel from './components/PausedSessionsPanel'
 import {
   ConfigState,
   EmptyState,
@@ -14,14 +15,17 @@ import {
 } from './components/StateViews'
 import { useOrders } from './hooks/useOrders'
 import { useSettings } from './hooks/useSettings'
+import { usePausedSessions } from './hooks/usePausedSessions'
 import {
   acknowledgeCustomerAsked,
   applyQuickReply,
   markMessageNotSent,
+  updateBotGloballyPaused,
   updateBusyDelay,
   updateBusyMode,
   updateGeneralWaitTime,
   updateOrderStatus,
+  unpauseSession,
 } from './lib/api'
 import { sendCustomerReply } from './lib/webhook'
 import type { QuickReply } from './lib/constants'
@@ -180,6 +184,21 @@ export default function App() {
   ordersRef.current = orders
 
   const { settings, patchSettings } = useSettings()
+
+  // ===== المحادثات الموقوفة (تدخّل بشري) =====
+  const {
+    sessions: pausedSessions,
+    loading: pausedLoading,
+    connected: pausedConnected,
+    refetch: refetchPaused,
+    removeLocal: removePausedLocal,
+  } = usePausedSessions()
+
+  // مجموعة أرقام الزبائن الموقوف عنهم البوت (لشارة "موقوف" في المحادثات)
+  const pausedPhones = useMemo(
+    () => new Set(pausedSessions.map((s) => s.customer_phone)),
+    [pausedSessions],
+  )
 
   // ===== تحديث الأوقات النسبية كل 30 ثانية =====
   useEffect(() => {
@@ -396,6 +415,35 @@ export default function App() {
     [patchSettings, generalWaitTime],
   )
 
+  // ===== إيقاف/تشغيل البوت العام + فك إيقاف رقم =====
+  const botGloballyPaused = settings?.bot_globally_paused ?? false
+
+  const handleToggleBotPause = useCallback(async () => {
+    const next = !botGloballyPaused
+    patchSettings({ bot_globally_paused: next })
+    try {
+      await updateBotGloballyPaused(next)
+    } catch (e) {
+      console.error(e)
+      patchSettings({ bot_globally_paused: !next })
+      alert('تعذّر تحديث حالة البوت، حاول مرة أخرى.')
+    }
+  }, [patchSettings, botGloballyPaused])
+
+  const handleUnpauseSession = useCallback(
+    async (phone: string) => {
+      removePausedLocal(phone)
+      try {
+        await unpauseSession(phone)
+      } catch (e) {
+        console.error(e)
+        await refetchPaused()
+        alert('تعذّر فك الإيقاف، حاول مرة أخرى.')
+      }
+    },
+    [removePausedLocal, refetchPaused],
+  )
+
   // ===== شاشات الحالة =====
   if (!isSupabaseConfigured) {
     return (
@@ -415,6 +463,8 @@ export default function App() {
             connected={connected}
             soundOn={soundOn}
             onToggleSound={toggleSound}
+            botGloballyPaused={botGloballyPaused}
+            onToggleBotPause={handleToggleBotPause}
           />
 
           {/* مبدّل العرض: الطلبات / المحادثات */}
@@ -446,6 +496,14 @@ export default function App() {
               المحادثات
             </button>
           </div>
+
+          {/* محادثات بحاجة تدخل — تظهر في الواجهتين عند وجود إيقاف */}
+          <PausedSessionsPanel
+            sessions={pausedSessions}
+            loading={pausedLoading}
+            connected={pausedConnected}
+            onUnpause={handleUnpauseSession}
+          />
 
           {view === 'orders' ? (
             <>
@@ -501,6 +559,7 @@ export default function App() {
               orders={orders}
               selectedPhone={selectedPhone}
               onSelectPhone={setSelectedPhone}
+              pausedPhones={pausedPhones}
             />
           )}
 

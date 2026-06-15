@@ -45,6 +45,21 @@ export interface RestaurantSettings {
   busy_mode: boolean
   busy_delay: number | null
   general_wait_time: number | null
+  /** عند true: البوت موقوف عن كل الزبائن (تدخّل بشري كامل) */
+  bot_globally_paused?: boolean | null
+}
+
+/** سبب إيقاف محادثة في جدول paused_sessions */
+export type PauseReason = 'customer_request' | 'manual' | string
+
+/**
+ * محادثة موقوفة — البوت لا يرد على هذا الرقم حتى يُحذف الصف.
+ * المفتاح الأساسي هو customer_phone.
+ */
+export interface PausedSession {
+  customer_phone: string
+  paused_at: string
+  reason: PauseReason
 }
 
 /** قيمة التبويبات — الكل بالإضافة إلى الحالات الرئيسية + الملغية */

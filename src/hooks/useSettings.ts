@@ -21,6 +21,7 @@ const DEFAULT_SETTINGS: RestaurantSettings = {
   busy_mode: false,
   busy_delay: 30,
   general_wait_time: 20,
+  bot_globally_paused: false,
 }
 
 export function useSettings(): UseSettingsResult {
