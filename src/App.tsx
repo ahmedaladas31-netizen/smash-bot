@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { ClipboardList, HelpCircle, MessagesSquare } from 'lucide-react'
 import Header from './components/Header'
+import LoginGate from './components/LoginGate'
 import BusyModeBar from './components/BusyModeBar'
 import BusyModeToggle from './components/BusyModeToggle'
 import StatusTabs from './components/StatusTabs'
@@ -42,6 +43,7 @@ import {
   primeAudio,
 } from './lib/sound'
 import { computeDailyNumbers, cx, parseItems } from './lib/utils'
+import { clearAuth, readStoredAuth } from './lib/auth'
 import type { Order, OrderStatus, TabKey } from './types'
 
 const SOUND_KEY = 'smashlab_sound'
@@ -83,6 +85,7 @@ function priorityRank(o: Order, cancelledIds: Set<string>): number {
 }
 
 export default function App() {
+  const [authed, setAuthed] = useState<boolean>(() => readStoredAuth())
   const [activeTab, setActiveTab] = useState<TabKey>('all')
   const [view, setView] = useState<'orders' | 'conversations' | 'faq'>('orders')
   const [selectedPhone, setSelectedPhone] = useState<string | null>(null)
@@ -247,6 +250,12 @@ export default function App() {
       localStorage.setItem(SOUND_KEY, next ? '1' : '0')
       return next
     })
+  }, [])
+
+  // ===== تسجيل الخروج =====
+  const handleLogout = useCallback(() => {
+    clearAuth()
+    setAuthed(false)
   }, [])
 
   // ===== العدّادات لكل تبويب =====
@@ -500,6 +509,12 @@ export default function App() {
     [patchSettings],
   )
 
+  // ===== بوابة الدخول =====
+  // تظهر قبل اللوحة كاملة؛ تُستدعى بعد كل الـ hooks للحفاظ على ترتيبها.
+  if (!authed) {
+    return <LoginGate onSuccess={() => setAuthed(true)} />
+  }
+
   // ===== شاشات الحالة =====
   if (!isSupabaseConfigured) {
     return (
@@ -521,6 +536,7 @@ export default function App() {
             onToggleSound={toggleSound}
             botGloballyPaused={botGloballyPaused}
             onToggleBotPause={handleToggleBotPause}
+            onLogout={handleLogout}
           />
 
           {/* مبدّل العرض: الطلبات / المحادثات */}

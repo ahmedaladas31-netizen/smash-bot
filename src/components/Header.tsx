@@ -1,4 +1,13 @@
-import { Beef, Bot, Power, Volume2, VolumeX, Wifi, WifiOff } from 'lucide-react'
+import {
+  Beef,
+  Bot,
+  LogOut,
+  Power,
+  Volume2,
+  VolumeX,
+  Wifi,
+  WifiOff,
+} from 'lucide-react'
 import { cx } from '../lib/utils'
 
 interface HeaderProps {
@@ -9,15 +18,18 @@ interface HeaderProps {
   botGloballyPaused: boolean
   /** تبديل إيقاف/تشغيل البوت عن كل الزبائن */
   onToggleBotPause: () => void
+  /** تسجيل الخروج من اللوحة */
+  onLogout: () => void
 }
 
-/** ترويسة اللوحة: الهوية + حالة الاتصال + التحكم بالصوت + إيقاف البوت العام */
+/** ترويسة اللوحة: الهوية + حالة الاتصال + التحكم بالصوت + إيقاف البوت العام + خروج */
 export default function Header({
   connected,
   soundOn,
   onToggleSound,
   botGloballyPaused,
   onToggleBotPause,
+  onLogout,
 }: HeaderProps) {
   return (
     <header className="flex items-center justify-between gap-3">
@@ -100,6 +112,17 @@ export default function Header({
           ) : (
             <VolumeX className="h-5 w-5" />
           )}
+        </button>
+
+        {/* تسجيل الخروج */}
+        <button
+          type="button"
+          onClick={onLogout}
+          title="تسجيل الخروج"
+          aria-label="تسجيل الخروج"
+          className="flex h-10 w-10 items-center justify-center rounded-xl bg-coal-800 text-zinc-400 ring-1 ring-coal-700 transition-colors hover:bg-flame-700/20 hover:text-flame-500"
+        >
+          <LogOut className="h-5 w-5" />
         </button>
       </div>
     </header>
