@@ -71,7 +71,7 @@ export default function Header({
           ) : (
             <Bot className="h-4 w-4" />
           )}
-          {botGloballyPaused ? 'البوت موقوف' : 'البوت يعمل'}
+          <span className="hidden sm:inline">{botGloballyPaused ? 'البوت موقوف' : 'البوت يعمل'}</span>
         </button>
 
         {/* حالة الاتصال اللحظي */}

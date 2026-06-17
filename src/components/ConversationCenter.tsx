@@ -1,5 +1,6 @@
-import { useEffect, useMemo, useRef } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import {
+  ArrowRight,
   Bot,
   Hand,
   MapPin,
@@ -63,6 +64,20 @@ export default function ConversationCenter({
   const { messages, conversations, loading, error, connected } =
     useConversations()
 
+  // تتبع اللوحة الظاهرة على الجوال: list | chat
+  const [mobilePanel, setMobilePanel] = useState<'list' | 'chat'>('list')
+
+  // عندما يفتح أحد بطاقة الطلب ويختار محادثة → انتقل للمحادثة مباشرة على الجوال
+  useEffect(() => {
+    if (selectedPhone) setMobilePanel('chat')
+  }, [selectedPhone])
+
+  // دالة داخلية تجمع اختيار الرقم مع التبديل على الجوال
+  const handlePhoneSelect = (phone: string) => {
+    onSelectPhone(phone)
+    setMobilePanel('chat')
+  }
+
   // الرقم الفعلي المعروض: المختار، وإلا أول محادثة
   const activePhone = selectedPhone ?? conversations[0]?.phone ?? null
 
@@ -113,8 +128,14 @@ export default function ConversationCenter({
 
   return (
     <div className="flex h-[calc(100vh-13rem)] gap-3">
-      {/* قائمة المحادثات (يمين) */}
-      <aside className="flex w-72 shrink-0 flex-col rounded-2xl border border-coal-700 bg-coal-800/60">
+      {/* قائمة المحادثات — على الجوال: تملأ الشاشة وتختفي عند فتح محادثة */}
+      <aside
+        className={cx(
+          'flex shrink-0 flex-col rounded-2xl border border-coal-700 bg-coal-800/60',
+          'w-full md:w-72',
+          mobilePanel === 'chat' ? 'hidden md:flex' : 'flex',
+        )}
+      >
         <div className="flex items-center justify-between border-b border-coal-700 px-4 py-3">
           <span className="font-bold text-zinc-200">المحادثات</span>
           <span
@@ -143,23 +164,37 @@ export default function ConversationCenter({
                   orders.find((o) => o.customer_phone === conv.phone)?.status ??
                   null
                 }
-                onClick={() => onSelectPhone(conv.phone)}
+                onClick={() => handlePhoneSelect(conv.phone)}
               />
             ))
           )}
         </div>
       </aside>
 
-      {/* سجل المحادثة (وسط) */}
-      <section className="flex min-w-0 flex-1 flex-col rounded-2xl border border-coal-700 bg-coal-800/40">
+      {/* سجل المحادثة — على الجوال: يملأ الشاشة عند اختيار محادثة */}
+      <section
+        className={cx(
+          'min-w-0 flex-1 flex-col rounded-2xl border border-coal-700 bg-coal-800/40',
+          mobilePanel === 'list' ? 'hidden md:flex' : 'flex',
+        )}
+      >
         {activePhone ? (
           <>
             <div className="flex items-center gap-2 border-b border-coal-700 px-4 py-3">
-              <User className="h-4 w-4 text-brand-400" />
+              {/* زر العودة للقائمة — يظهر فقط على الجوال */}
+              <button
+                type="button"
+                onClick={() => setMobilePanel('list')}
+                title="العودة للمحادثات"
+                className="md:hidden flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-coal-700 text-zinc-300 transition-colors hover:bg-coal-600 active:scale-95"
+              >
+                <ArrowRight className="h-4 w-4" />
+              </button>
+              <User className="h-4 w-4 shrink-0 text-brand-400" />
               <span className="truncate font-bold text-zinc-200">
                 {customerName}
               </span>
-              <span className="nums text-xs text-zinc-500">
+              <span className="nums shrink-0 text-xs text-zinc-500">
                 {displayPhone(activePhone)}
               </span>
               {pausedPhones.has(activePhone) && <PausedBadge />}

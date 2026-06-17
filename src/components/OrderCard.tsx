@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import {
   Bell,
+  ChevronDown,
   Clock,
   Hand,
   MapPin,
@@ -89,6 +90,7 @@ export default function OrderCard({
   onResumeBot,
 }: OrderCardProps) {
   const [pending, setPending] = useState(false)
+  const [detailsOpen, setDetailsOpen] = useState(false)
   const meta = STATUS_META[order.status]
   const parsed = parseItems(order.items)
   const asked = Boolean(order.customer_asked)
@@ -159,7 +161,7 @@ export default function OrderCard({
         </div>
       )}
 
-      <div className="space-y-4 p-4 sm:p-5">
+      <div className="flex flex-col gap-4 p-4 sm:p-5">
         {/* الترويسة: الرقم + الاسم + الوقت + الحالة */}
         <div className="flex items-start justify-between gap-3">
           <div className="flex min-w-0 items-start gap-2.5">
@@ -204,91 +206,18 @@ export default function OrderCard({
           </div>
         </div>
 
-        {/* الهاتف + واتساب */}
-        <div className="flex items-center justify-between gap-2 rounded-xl bg-coal-900/60 px-3 py-2">
-          <div className="flex items-center gap-2 text-sm">
-            <Phone className="h-4 w-4 text-zinc-400" />
-            <span className="nums font-semibold text-zinc-200">
-              {displayPhone(order.customer_phone)}
-            </span>
-          </div>
-          <div className="flex shrink-0 items-center gap-2">
-            {onOpenConversation && order.customer_phone && (
-              <button
-                type="button"
-                onClick={() => onOpenConversation(order.customer_phone)}
-                title="فتح المحادثة في مركز المحادثات"
-                className="inline-flex items-center gap-1.5 rounded-lg bg-coal-700 px-3 py-1.5 text-sm font-bold text-zinc-200 ring-1 ring-coal-600 transition-colors hover:bg-coal-600 active:scale-95"
-              >
-                <MessagesSquare className="h-4 w-4" />
-                المحادثة
-              </button>
-            )}
-            <a
-              href={phoneToWaLink(order.customer_phone)}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-600 px-3 py-1.5 text-sm font-bold text-white transition-colors hover:bg-emerald-500 active:scale-95"
-            >
-              <MessageCircle className="h-4 w-4" />
-              واتساب
-            </a>
-          </div>
-        </div>
-
-        {/* تدخل يدوي: إيقاف/تشغيل البوت عن هذا الزبون */}
-        {order.customer_phone && (onManualPause || onResumeBot) && (
-          <button
-            type="button"
-            disabled={pending}
-            onClick={() =>
-              run(() =>
-                Promise.resolve(
-                  isPaused
-                    ? onResumeBot?.(order.customer_phone)
-                    : onManualPause?.(order.customer_phone),
-                ),
-              )
-            }
-            title={
-              isPaused
-                ? 'البوت موقوف عن هذا الزبون — اضغط لإعادة تشغيله'
-                : 'إيقاف البوت والرد يدوياً على هذا الزبون'
-            }
-            className={cx(
-              'flex w-full items-center justify-center gap-2 rounded-xl px-3 py-2 text-sm font-bold transition-all active:scale-95 disabled:opacity-50',
-              isPaused
-                ? 'bg-emerald-600 text-white ring-1 ring-emerald-500 hover:bg-emerald-500'
-                : 'bg-amber-500/10 text-amber-300 ring-1 ring-amber-500/40 hover:bg-amber-500/20',
-            )}
-          >
-            {isPaused ? (
-              <>
-                <Play className="h-4 w-4" />
-                تشغيل البوت
-              </>
-            ) : (
-              <>
-                <Hand className="h-4 w-4" />
-                تدخل يدوي
-              </>
-            )}
-          </button>
-        )}
-
-        {/* وصف الطلب — العنصر الأبرز في البطاقة */}
+        {/* وصف الطلب — العنصر الأبرز في البطاقة — يظهر دائماً */}
         <div className="rounded-xl bg-coal-900/60 p-3.5 ring-1 ring-coal-700">
           <div className="mb-2 flex items-center gap-1.5 text-xs font-semibold text-zinc-400">
             <ShoppingBag className="h-4 w-4" />
             تفاصيل الطلب
           </div>
-          {/* summary يحوي الملخّص، أو النص الخام كما هو عند فشل التحليل */}
           <p className="whitespace-pre-line break-words text-xl font-black leading-relaxed text-white">
             {parsed.summary || 'بدون تفاصيل'}
           </p>
         </div>
 
-        {/* نوع التوصيل + العنوان + المجموع */}
+        {/* نوع التوصيل + المجموع — يظهران دائماً */}
         <div className="flex flex-wrap items-center gap-2">
           {parsed.delivery_type && (
             <span
@@ -312,47 +241,142 @@ export default function OrderCard({
           </span>
         </div>
 
-        {parsed.address && (
-          <div className="flex items-start gap-1.5 text-sm text-zinc-300">
-            <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-flame-500" />
-            <span className="leading-relaxed">{parsed.address}</span>
+        {/* الهاتف + واتساب — مخفي على الجوال حتى يضغط "تفاصيل" */}
+        <div className={cx(!detailsOpen && 'hidden md:block')}>
+          <div className="flex items-center justify-between gap-2 rounded-xl bg-coal-900/60 px-3 py-2">
+            <div className="flex items-center gap-2 text-sm">
+              <Phone className="h-4 w-4 text-zinc-400" />
+              <span className="nums font-semibold text-zinc-200">
+                {displayPhone(order.customer_phone)}
+              </span>
+            </div>
+            <div className="flex shrink-0 items-center gap-2">
+              {onOpenConversation && order.customer_phone && (
+                <button
+                  type="button"
+                  onClick={() => onOpenConversation(order.customer_phone)}
+                  title="فتح المحادثة في مركز المحادثات"
+                  className="inline-flex items-center gap-1.5 rounded-lg bg-coal-700 px-3 py-1.5 text-sm font-bold text-zinc-200 ring-1 ring-coal-600 transition-colors hover:bg-coal-600 active:scale-95"
+                >
+                  <MessagesSquare className="h-4 w-4" />
+                  المحادثة
+                </button>
+              )}
+              <a
+                href={phoneToWaLink(order.customer_phone)}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-600 px-3 py-1.5 text-sm font-bold text-white transition-colors hover:bg-emerald-500 active:scale-95"
+              >
+                <MessageCircle className="h-4 w-4" />
+                واتساب
+              </a>
+            </div>
+          </div>
+        </div>
+
+        {/* تدخل يدوي — مخفي على الجوال حتى يضغط "تفاصيل" */}
+        {order.customer_phone && (onManualPause || onResumeBot) && (
+          <div className={cx(!detailsOpen && 'hidden md:block')}>
+            <button
+              type="button"
+              disabled={pending}
+              onClick={() =>
+                run(() =>
+                  Promise.resolve(
+                    isPaused
+                      ? onResumeBot?.(order.customer_phone)
+                      : onManualPause?.(order.customer_phone),
+                  ),
+                )
+              }
+              title={
+                isPaused
+                  ? 'البوت موقوف عن هذا الزبون — اضغط لإعادة تشغيله'
+                  : 'إيقاف البوت والرد يدوياً على هذا الزبون'
+              }
+              className={cx(
+                'flex w-full items-center justify-center gap-2 rounded-xl px-3 py-2 text-sm font-bold transition-all active:scale-95 disabled:opacity-50',
+                isPaused
+                  ? 'bg-emerald-600 text-white ring-1 ring-emerald-500 hover:bg-emerald-500'
+                  : 'bg-amber-500/10 text-amber-300 ring-1 ring-amber-500/40 hover:bg-amber-500/20',
+              )}
+            >
+              {isPaused ? (
+                <>
+                  <Play className="h-4 w-4" />
+                  تشغيل البوت
+                </>
+              ) : (
+                <>
+                  <Hand className="h-4 w-4" />
+                  تدخل يدوي
+                </>
+              )}
+            </button>
           </div>
         )}
 
-        {/* حالة وقت التحضير */}
-        {order.prep_time != null && order.time_status !== 'none' && (
-          <PrepTimeBanner
-            minutes={order.prep_time}
-            status={order.time_status}
-          />
+        {/* العنوان — مخفي على الجوال حتى يضغط "تفاصيل" */}
+        {parsed.address && (
+          <div className={cx(!detailsOpen && 'hidden md:block')}>
+            <div className="flex items-start gap-1.5 text-sm text-zinc-300">
+              <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-flame-500" />
+              <span className="leading-relaxed">{parsed.address}</span>
+            </div>
+          </div>
         )}
+
+        {/* وقت التحضير — مخفي على الجوال حتى يضغط "تفاصيل" */}
+        {order.prep_time != null && order.time_status !== 'none' && (
+          <div className={cx(!detailsOpen && 'hidden md:block')}>
+            <PrepTimeBanner
+              minutes={order.prep_time}
+              status={order.time_status}
+            />
+          </div>
+        )}
+
+        {/* زر "تفاصيل وردود" — يظهر فقط على الجوال */}
+        <button
+          type="button"
+          className="md:hidden flex w-full items-center justify-center gap-2 rounded-xl bg-coal-900/50 px-3 py-2 text-sm font-bold text-zinc-400 ring-1 ring-coal-700 transition-colors hover:bg-coal-700/50 active:scale-95"
+          onClick={() => setDetailsOpen((v) => !v)}
+        >
+          <ChevronDown
+            className={cx(
+              'h-4 w-4 transition-transform duration-200',
+              detailsOpen && 'rotate-180',
+            )}
+          />
+          {detailsOpen ? 'إخفاء التفاصيل' : 'تفاصيل وردود'}
+        </button>
 
         <div className="h-px bg-coal-700" />
 
-        {/* أزرار تغيير الحالة */}
+        {/* أزرار تغيير الحالة — تظهر دائماً */}
         <StatusButtons
           current={order.status}
           disabled={pending}
           onChange={(status) => run(() => onStatusChange(order.id, status))}
         />
 
-        <div className="h-px bg-coal-700" />
-
-        {/* الردود الجاهزة للزبون */}
-        <QuickReplies
-          phone={order.customer_phone}
-          onReplied={(reply) =>
-            onQuickReply(order.id, order.customer_phone, reply)
-          }
-        />
-
-        {/* رسالة يدوية حرّة — تظهر فقط حين يكون البوت موقوفاً عن الزبون */}
-        {isPaused && (
-          <>
-            <div className="h-px bg-coal-700" />
-            <ManualReply phone={order.customer_phone} />
-          </>
-        )}
+        {/* الردود الجاهزة + الرسالة اليدوية — مخفية على الجوال حتى يضغط "تفاصيل" */}
+        <div className={cx(!detailsOpen && 'hidden md:block', 'flex flex-col gap-4')}>
+          <div className="h-px bg-coal-700" />
+          <QuickReplies
+            phone={order.customer_phone}
+            onReplied={(reply) =>
+              onQuickReply(order.id, order.customer_phone, reply)
+            }
+          />
+          {isPaused && (
+            <>
+              <div className="h-px bg-coal-700" />
+              <ManualReply phone={order.customer_phone} />
+            </>
+          )}
+        </div>
       </div>
     </article>
   )

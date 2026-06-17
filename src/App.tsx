@@ -540,45 +540,46 @@ export default function App() {
           />
 
           {/* مبدّل العرض: الطلبات / المحادثات */}
-          <div className="flex gap-2">
+          <div className="flex gap-1.5 sm:gap-2">
             <button
               type="button"
               onClick={() => setView('orders')}
               className={cx(
-                'inline-flex items-center gap-2 rounded-xl px-4 py-2 text-base font-bold transition-all active:scale-95',
+                'inline-flex items-center gap-1.5 sm:gap-2 rounded-xl px-3 sm:px-4 py-1.5 sm:py-2 text-sm sm:text-base font-bold transition-all active:scale-95',
                 view === 'orders'
                   ? 'bg-gradient-to-l from-brand-600 to-flame-700 text-white shadow-lg shadow-brand-600/25'
                   : 'bg-coal-800/80 text-zinc-300 ring-1 ring-coal-700 hover:bg-coal-700',
               )}
             >
-              <ClipboardList className="h-5 w-5" />
+              <ClipboardList className="h-4 w-4 sm:h-5 sm:w-5" />
               الطلبات
             </button>
             <button
               type="button"
               onClick={() => setView('conversations')}
               className={cx(
-                'inline-flex items-center gap-2 rounded-xl px-4 py-2 text-base font-bold transition-all active:scale-95',
+                'inline-flex items-center gap-1.5 sm:gap-2 rounded-xl px-3 sm:px-4 py-1.5 sm:py-2 text-sm sm:text-base font-bold transition-all active:scale-95',
                 view === 'conversations'
                   ? 'bg-gradient-to-l from-brand-600 to-flame-700 text-white shadow-lg shadow-brand-600/25'
                   : 'bg-coal-800/80 text-zinc-300 ring-1 ring-coal-700 hover:bg-coal-700',
               )}
             >
-              <MessagesSquare className="h-5 w-5" />
+              <MessagesSquare className="h-4 w-4 sm:h-5 sm:w-5" />
               المحادثات
             </button>
             <button
               type="button"
               onClick={() => setView('faq')}
               className={cx(
-                'inline-flex items-center gap-2 rounded-xl px-4 py-2 text-base font-bold transition-all active:scale-95',
+                'inline-flex items-center gap-1.5 sm:gap-2 rounded-xl px-3 sm:px-4 py-1.5 sm:py-2 text-sm sm:text-base font-bold transition-all active:scale-95',
                 view === 'faq'
                   ? 'bg-gradient-to-l from-brand-600 to-flame-700 text-white shadow-lg shadow-brand-600/25'
                   : 'bg-coal-800/80 text-zinc-300 ring-1 ring-coal-700 hover:bg-coal-700',
               )}
             >
-              <HelpCircle className="h-5 w-5" />
-              الأسئلة الشائعة
+              <HelpCircle className="h-4 w-4 sm:h-5 sm:w-5" />
+              <span className="hidden sm:inline">الأسئلة الشائعة</span>
+              <span className="sm:hidden">الأسئلة</span>
             </button>
           </div>
 
