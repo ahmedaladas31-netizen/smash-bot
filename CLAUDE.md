@@ -5,6 +5,8 @@
 لوحة إدارة طلبات واتساب لحظية لمطعم **سماش لاب**.
 الموظف يفتحها على شاشة المطبخ ويدير الطلبات الواردة عبر واتساب.
 
+> 🤖 **هذا الملف للداشبورد (React) فقط.** جانب البوت وn8n وtworkflows في [BOT.md](BOT.md) — راجعه لأي شغل على البوت/المعالجة/تجميع الرسائل.
+
 - **Stack:** React 18 + TypeScript + Vite + Tailwind CSS
 - **DB:** Supabase (project: `smash-menu`) — Realtime مفعّل
 - **Messaging:** n8n webhook يرسل رسائل واتساب للزبائن (`VITE_WEBHOOK_URL`)
